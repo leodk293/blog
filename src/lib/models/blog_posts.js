@@ -6,16 +6,29 @@ const postSchema = new Schema(
             type: String,
             required: true
         },
-        content: {
+        description: {
             type: String,
             required: true
         },
-        author: {
+        /*image: {
+            data: Buffer,
+            contentType: String,
+            name: String
+        },*/
+        imageUrl: {
+            type: String,
+            required: true
+        },
+        authorId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true
         },
-        userImage: {
+        authorImage: {
+            type: String,
+            required: true
+        },
+        authorName: {
             type: String,
             required: true
         },

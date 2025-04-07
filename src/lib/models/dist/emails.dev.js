@@ -13,47 +13,21 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-var postSchema = new _mongoose.Schema({
-  title: {
+var emailSchema = new _mongoose.Schema({
+  userName: {
     type: String,
     required: true
   },
-  description: {
+  userEmail: {
     type: String,
-    required: true
-  },
-
-  /*image: {
-      data: Buffer,
-      contentType: String,
-      name: String
-  },*/
-  imageUrl: {
-    type: String,
-    required: true
-  },
-  authorId: {
-    type: _mongoose["default"].Schema.Types.ObjectId,
-    ref: "User",
-    required: true
-  },
-  authorImage: {
-    type: String,
-    required: true
-  },
-  authorName: {
-    type: String,
-    required: true
-  },
-  category: {
-    type: String,
-    required: true
+    required: true,
+    unique: true
   }
 }, {
   timestamps: true
 });
 
-var Post = _mongoose.models.Post || _mongoose["default"].model("Post", postSchema);
+var Email = _mongoose.models.Email || _mongoose["default"].model("Email", emailSchema);
 
-var _default = Post;
+var _default = Email;
 exports["default"] = _default;
