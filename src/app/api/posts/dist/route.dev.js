@@ -18,7 +18,7 @@ var _promises = require("fs/promises");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 var POST = function POST(request) {
-  var formData, title, description, image, authorId, authorImage, authorName, category, userExists, imageType, imageName, timeStamp, imageBuffer, buffer, path, imageUrl, newPost;
+  var formData, title, description, image, authorId, authorImage, authorName, category, userExists, imageName, timeStamp, imageBuffer, buffer, path, imageUrl, newPost;
   return regeneratorRuntime.async(function POST$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
@@ -71,23 +71,22 @@ var POST = function POST(request) {
           }));
 
         case 20:
-          imageType = image.type;
           imageName = image.name;
           timeStamp = Date.now();
-          _context.next = 25;
+          _context.next = 24;
           return regeneratorRuntime.awrap(image.arrayBuffer());
 
-        case 25:
+        case 24:
           imageBuffer = _context.sent;
           buffer = Buffer.from(imageBuffer);
           path = "./public/".concat(timeStamp, "_").concat(imageName);
-          _context.next = 30;
+          _context.next = 29;
           return regeneratorRuntime.awrap((0, _promises.writeFile)(path, buffer));
 
-        case 30:
+        case 29:
           imageUrl = "/".concat(timeStamp, "_").concat(imageName);
           console.log(imageUrl);
-          _context.next = 34;
+          _context.next = 33;
           return regeneratorRuntime.awrap(_blog_posts["default"].create({
             title: title,
             description: description,
@@ -98,7 +97,7 @@ var POST = function POST(request) {
             category: category
           }));
 
-        case 34:
+        case 33:
           newPost = _context.sent;
           return _context.abrupt("return", _server.NextResponse.json({
             message: 'Post created successfully',
@@ -107,8 +106,8 @@ var POST = function POST(request) {
             status: 201
           }));
 
-        case 38:
-          _context.prev = 38;
+        case 37:
+          _context.prev = 37;
           _context.t0 = _context["catch"](0);
           console.error("Error creating post:", _context.t0);
           return _context.abrupt("return", _server.NextResponse.json({
@@ -117,12 +116,12 @@ var POST = function POST(request) {
             status: 500
           }));
 
-        case 42:
+        case 41:
         case "end":
           return _context.stop();
       }
     }
-  }, null, null, [[0, 38]]);
+  }, null, null, [[0, 37]]);
 };
 
 exports.POST = POST;

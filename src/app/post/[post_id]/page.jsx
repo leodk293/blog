@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
 import React from "react";
 import Loader from "@/app/components/loader/Loader";
 import Image from "next/image";
@@ -24,6 +25,7 @@ const PostPage = ({ params }) => {
     loading: false,
     data: undefined,
   });
+  const router = useRouter();
 
   const { data: session } = useSession();
 
@@ -44,6 +46,29 @@ const PostPage = ({ params }) => {
     } catch (error) {
       console.error("Failed to fetch post:", error);
       setPostData((prev) => ({ ...prev, loading: false, error: true }));
+    }
+  }
+
+  async function handlePostSuppression(postId, userId) {
+    const confirmed = confirm("Are you sure you want to delete this post ?");
+    if (confirmed) {
+      try {
+        const response = await fetch(
+          `/api/posts?id=${postId}&userId=${userId}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        router.push("/");
+      } catch (error) {
+        console.error("Failed to delete post:", error);
+      }
     }
   }
 
@@ -109,7 +134,6 @@ const PostPage = ({ params }) => {
   }
 
   const { data } = postData;
-  const postDate = transformDate(postData.createdAt);
 
   return (
     <div className="bg-gray-50 min-h-screen pb-16">
@@ -141,9 +165,9 @@ const PostPage = ({ params }) => {
       <div className="container mx-auto px-4">
         <div className="relative -mt-24 bg-white rounded-t-3xl shadow-lg p-8">
           {postData.data.authorId === session?.user?.id ? (
-            <div className=" flex flex-row gap-3">
+            <div className=" flex flex-row">
               <Link
-                href="/"
+                href={`/edit-post/${postData.data._id}`}
                 className="flex items-center self-center gap-2 bg-white/20 backdrop-blur-sm text-blue-500 px-6 py-3 rounded-lg font-medium hover:bg-white/30 transition-colors"
               >
                 <button className=" cursor-pointer border border-blue-100 rounded-[5px] bg-blue-100 px-4 py-2 flex flex-row font-bold gap-1">
@@ -151,7 +175,12 @@ const PostPage = ({ params }) => {
                   <span className=" self-center">Edit</span>
                 </button>
               </Link>
-              <button className=" cursor-pointer border border-red-100 rounded-[5px] bg-red-100 px-4 py-2 text-red-500 self-center flex flex-row font-bold gap-1">
+              <button
+                onClick={() => {
+                  handlePostSuppression(postData.data._id, session?.user?.id);
+                }}
+                className=" cursor-pointer border border-red-100 rounded-[5px] bg-red-100 px-4 py-2 text-red-500 self-center flex flex-row font-bold gap-1"
+              >
                 <Delete className=" self-center" color="red" size={18} />
                 <span className=" self-center">Delete</span>
               </button>
@@ -191,10 +220,16 @@ const PostPage = ({ params }) => {
                   {data.authorName}
                 </p>
                 <Link
-                  href={`/author/${data.authorId}`}
+                  href={
+                    session?.user?.id === data.authorId
+                      ? `/my-profile/${session?.user?.id}`
+                      : `/author-profile/${data.authorId}`
+                  }
                   className="text-blue-600 hover:text-blue-800 text-sm transition-colors"
                 >
-                  View profile
+                  {session?.user?.id === data.authorId
+                    ? "Your profile"
+                    : "Visit profile"}
                 </Link>
               </div>
             </div>
@@ -240,7 +275,7 @@ const PostPage = ({ params }) => {
                 </div>
 
                 <Link
-                  href={`/author/${data.authorId}`}
+                  href={`/author-profile/${data.authorId}`}
                   className="inline-flex items-center px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
                 >
                   More posts by {data.authorName}

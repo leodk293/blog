@@ -1,6 +1,7 @@
 import Post from "@/lib/models/blog_posts";
 import { connectMongoDB } from "@/lib/db/connectMongoDB";
 import { NextResponse } from "next/server";
+import { writeFile } from "fs/promises";
 
 export const GET = async (request, { params }) => {
     try {
@@ -16,7 +17,6 @@ export const GET = async (request, { params }) => {
         await connectMongoDB();
 
         const post = await Post.findById(id);
-
         if (!post) {
             return NextResponse.json(
                 { message: "Post not found" },
@@ -45,9 +45,8 @@ export const PUT = async (request, { params }) => {
             );
         }
 
-        // Use formData instead of request.json() to handle image upload
         const formData = await request.formData();
-        
+
         const title = formData.get("title");
         const description = formData.get("description");
         const imageFile = formData.get("image");
@@ -87,14 +86,14 @@ export const PUT = async (request, { params }) => {
 
         // Find the post first to check ownership
         const existingPost = await Post.findById(id);
-        
+
         if (!existingPost) {
             return NextResponse.json(
                 { message: "Post not found" },
                 { status: 404 }
             );
         }
-        
+
         if (existingPost.authorId.toString() !== authorId) {
             return NextResponse.json(
                 { message: "Unauthorized: Only the owner can update this post" },
@@ -102,24 +101,22 @@ export const PUT = async (request, { params }) => {
             );
         }
 
-        // Prepare update data
         const updateData = {};
         if (title) updateData.title = title;
         if (description) updateData.description = description;
         if (category) updateData.category = category;
 
-        // Handle image update if a new image is uploaded
+        // Handle image upload if a new image is provided
         if (imageFile && imageFile.size > 0) {
-            // Convert image file to Buffer
-            const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
-            const imageType = imageFile.type;
+            const timeStamp = Date.now();
             const imageName = imageFile.name;
-            
-            updateData.image = {
-                data: imageBuffer,
-                contentType: imageType,
-                name: imageName
-            };
+            const imageBuffer = await imageFile.arrayBuffer();
+            const buffer = Buffer.from(imageBuffer);
+            const path = `./public/${timeStamp}_${imageName}`;
+            await writeFile(path, buffer);
+            const imageUrl = `/${timeStamp}_${imageName}`;
+
+            updateData.imageUrl = imageUrl;
         }
 
         if (Object.keys(updateData).length === 0) {

@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import googleLogo from "../../assets/google-logo.png";
 import Image from "next/image";
@@ -9,11 +10,26 @@ import { useSession, signIn, signOut } from "next-auth/react";
 const Nav = () => {
   const { status, data: session } = useSession();
 
+  const [isScrolled, setIsScrolled] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="bg-white py-5 shadow-sm sticky top-0 z-10 border-b border-gray-100">
+    <header
+      className={`py-5 sticky top-0 z-10 border-b border-b-transparent transition-all duration-500 ${
+        isScrolled ? "bg-white shadow-sm border-b-gray-100" : ""
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
-          {/* Logo */}
           <Link href="/" className="">
             <h1 className=" text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
               NeonThoughts

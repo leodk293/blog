@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 
 const CreatePostPage = () => {
-  const { data: session } = useSession();
+  const { status, data: session } = useSession();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -43,58 +43,61 @@ const CreatePostPage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
+    if (status === "authenticated") {
+      e.preventDefault();
+      setIsLoading(true);
+      setError("");
 
-    
-    if (!title.trim()) {
-      setError("Title is required");
-      setIsLoading(false);
-      return;
-    }
-
-    if (!description.trim()) {
-      setError("Description is required");
-      setIsLoading(false);
-      return;
-    }
-
-    if (!image) {
-      setError("Please upload a thumbnail image");
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("description", description);
-      formData.append("category", category);
-      formData.append("authorId", session?.user?.id);
-      formData.append("authorImage", session?.user?.image);
-      formData.append("authorName", session?.user?.name);
-      formData.append("image", image);
-
-      const response = await fetch("/api/posts", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create post");
+      if (!title.trim()) {
+        setError("Title is required");
+        setIsLoading(false);
+        return;
       }
-      notify();
 
-      router.push("/");
-      router.refresh();
-    } catch (err) {
-      console.error("Error creating post:", err);
-      setError(err.message || "Something went wrong");
-    } finally {
-      setIsLoading(false);
+      if (!description.trim()) {
+        setError("Description is required");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!image) {
+        setError("Please upload a thumbnail image");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("description", description);
+        formData.append("category", category);
+        formData.append("authorId", session?.user?.id);
+        formData.append("authorImage", session?.user?.image);
+        formData.append("authorName", session?.user?.name);
+        formData.append("image", image);
+
+        const response = await fetch("/api/posts", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to create post");
+        }
+        notify();
+
+        router.push("/");
+        router.refresh();
+      } catch (err) {
+        console.error("Error creating post:", err);
+        setError(err.message || "Something went wrong");
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      alert("Please sign in before making posts");
     }
   };
 
@@ -126,6 +129,7 @@ const CreatePostPage = () => {
           </label>
           <div className="relative">
             <input
+              required
               id="thumbnail"
               name="image"
               type="file"
@@ -170,6 +174,7 @@ const CreatePostPage = () => {
             Blog Title
           </label>
           <input
+            required
             id="title"
             type="text"
             name="title"
@@ -188,6 +193,7 @@ const CreatePostPage = () => {
             Blog Description
           </label>
           <textarea
+            required
             id="description"
             name="description"
             placeholder="Write your content here..."
@@ -276,8 +282,6 @@ const CreatePostPage = () => {
           <ToastContainer />
         </div>
       </form>
-
-     
     </div>
   );
 };

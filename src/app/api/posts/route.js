@@ -34,7 +34,6 @@ export const POST = async (request) => {
             );
         }
 
-        const imageType = image.type;
         const imageName = image.name;
         const timeStamp = Date.now();
 
