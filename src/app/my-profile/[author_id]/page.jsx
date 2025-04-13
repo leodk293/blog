@@ -5,6 +5,7 @@ import Loader from "@/app/components/loader/Loader";
 import Image from "next/image";
 import Link from "next/link";
 import ReadMore from "@/app/components/readMore";
+import { Search } from "lucide-react";
 import { useSession, signIn } from "next-auth/react";
 import {
   ArrowRight,
@@ -22,6 +23,7 @@ const AuthorProfilePage = ({ params }) => {
   const resolvedParams = use(params);
   const id = resolvedParams.author_id;
   const { status, data: session } = useSession();
+  const [articleTitle, setArticleTitle] = useState("");
   const [userPosts, setUserPosts] = useState({
     loading: false,
     posts: [],
@@ -84,9 +86,15 @@ const AuthorProfilePage = ({ params }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+
       setUserPosts({
         loading: false,
-        posts: data.filter((item) => item.authorId === session?.user?.id),
+        posts: data.filter(
+          (item) =>
+            item.authorId === session?.user?.id &&
+            (articleTitle === "" ||
+              item.title.toLowerCase().includes(articleTitle.toLowerCase()))
+        ),
         error: false,
       });
     } catch (error) {
@@ -101,6 +109,22 @@ const AuthorProfilePage = ({ params }) => {
       getUsersData();
     }
   }, [fetchUserPosts, status]);
+
+  // Add this useEffect to filter posts when articleTitle changes
+  useEffect(() => {
+    if (status !== "loading" && userPosts.posts.length > 0) {
+      // Re-filter the existing posts without making a new API call
+      setUserPosts((prevState) => ({
+        ...prevState,
+        posts: prevState.posts.filter(
+          (item) =>
+            item.authorId === session?.user?.id &&
+            (articleTitle === "" ||
+              item.title.toLowerCase().includes(articleTitle.toLowerCase()))
+        ),
+      }));
+    }
+  }, [articleTitle]);
 
   if (status === "loading") {
     return (
@@ -191,28 +215,10 @@ const AuthorProfilePage = ({ params }) => {
                     <Plus size={18} />
                     <span>New Post</span>
                   </Link>
-
-                  {/* <div className="flex flex-col sm:flex-row gap-3 mt-6 md:mt-0">
-              <Link
-                href="/create-post"
-                className="flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-opacity-90 transition-colors"
-              >
-                <Plus size={18} />
-                <span>New Post</span>
-              </Link>
-              <Link
-                href="/edit-profile"
-                className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-medium hover:bg-white/30 transition-colors"
-              >
-                <Edit size={18} />
-                <span>Edit Profile</span>
-              </Link>
-            </div> */}
                 </div>
               </div>
             </div>
 
-            {/* Profile stats */}
             <div className="container mx-auto px-4 py-6">
               <div className="bg-white rounded-xl shadow-md p-6 -mt-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -240,20 +246,10 @@ const AuthorProfilePage = ({ params }) => {
                       <p className="font-semibold">{userPosts.posts.length}</p>
                     </div>
                   </div>
-                  {/* <div className="flex items-center gap-4 p-4 rounded-lg bg-green-50">
-              <div className="bg-green-100 p-3 rounded-full">
-                <FileText size={24} className="text-green-600" />
-              </div>
-              <div>
-                <h3 className="text-gray-600 text-sm">Drafts</h3>
-                <p className="font-semibold">0</p>
-              </div>
-            </div> */}
                 </div>
               </div>
             </div>
 
-            {/* Posts section */}
             <div className="container mx-auto px-4 mt-6">
               {userPosts.loading && (
                 <div className="flex justify-center py-12">
@@ -284,14 +280,26 @@ const AuthorProfilePage = ({ params }) => {
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
                       Your Articles
                     </h2>
-                    <div className="flex gap-2">
-                      <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
-                        Recent
-                      </button>
-                      <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
-                        Popular
-                      </button>
-                    </div>
+
+                    <form className=" border border-transparent px-4 py-2 rounded-lg bg-gray-100 flex flex-row gap-2">
+                      <Search
+                        className=" self-center text-gray-600"
+                        size={24}
+                        strokeWidth={2.25}
+                      />
+                      <input
+                        type="text"
+                        value={articleTitle}
+                        onChange={(e) => {
+                          setArticleTitle(e.target.value);
+                          if (e.target.value === "") {
+                            fetchUserPosts(); // Refetch all posts when search is cleared
+                          }
+                        }}
+                        placeholder="Enter the title of an article"
+                        className="bg-transparent self-center outline-none text-gray-700 font-medium transition-colors"
+                      />
+                    </form>
                   </div>
 
                   {userPosts.posts.length > 0 ? (
@@ -357,7 +365,7 @@ const AuthorProfilePage = ({ params }) => {
                         className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                       >
                         <Plus size={18} />
-                        <span>Create Your First Post</span>
+                        <span>Create A Post</span>
                       </Link>
                     </div>
                   )}

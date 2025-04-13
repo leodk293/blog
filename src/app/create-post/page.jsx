@@ -223,6 +223,7 @@ const CreatePostPage = () => {
               <option value="Lifestyle">Lifestyle</option>
               <option value="Startup">Startup</option>
               <option value="Series">Series</option>
+              <option value="Education">Education</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
               <svg

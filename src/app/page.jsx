@@ -4,6 +4,7 @@ import Link from "next/link";
 import googleLogo from "./assets/google-logo.png";
 import { useState, useEffect, useCallback } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { ToastContainer, toast } from "react-toastify";
 import Loader from "./components/loader/Loader";
 import ReadMore from "./components/readMore";
 import { ArrowRight, Shield, Mail, User } from "lucide-react";
@@ -11,6 +12,7 @@ import { nanoid } from "nanoid";
 
 export default function Home() {
   const { status, data: session } = useSession();
+  const [subscriptionEmail, setSubscriptionEmail] = useState("");
   const [category, setCategory] = useState("all");
   const [posts, setPosts] = useState({
     error: false,
@@ -18,7 +20,64 @@ export default function Home() {
     data: [],
   });
 
-  const categories = ["all", "Technology", "Lifestyle", "Startup", "Series"];
+  const categories = [
+    "all",
+    "Technology",
+    "Lifestyle",
+    "Startup",
+    "Series",
+    "Education",
+  ];
+  const successSubscription = () => {
+    toast.success("Subscription successful", {
+      position: "top-right",
+      autoClose: 1000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
+  };
+
+  const error = (errorMsg) => {
+    toast.error(`Error saving email: ${errorMsg}`, {
+      position: "top-right",
+      autoClose: 1000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
+  };
+
+  const storedEmails = async (e) => {
+    e.preventDefault();
+    if (status === "authenticated") {
+      try {
+        const response = await fetch("api/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userName: session?.user?.name,
+            userEmail: subscriptionEmail,
+          }),
+        });
+        if (!response.ok) {
+          error(response.statusText);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        } else {
+          successSubscription();
+          setSubscriptionEmail("");
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      alert("You must be logged in to subscribe.");
+    }
+  };
 
   const fetchPosts = useCallback(async () => {
     setPosts((prev) => ({ ...prev, loading: true, error: false }));
@@ -120,15 +179,21 @@ export default function Home() {
           </div>
         )}
 
-        <form className="flex flex-col sm:flex-row w-full max-w-md mt-4 gap-3 sm:gap-0 relative">
+        <form
+          onSubmit={storedEmails}
+          className="flex flex-col sm:flex-row w-full max-w-md mt-4 gap-3 sm:gap-0 relative"
+        >
           <div className="w-full relative">
             <Mail
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
               size={20}
             />
             <input
+              required
+              onChange={(e) => setSubscriptionEmail(e.target.value)}
               className="border rounded-lg sm:rounded-r-none border-gray-300 pl-10 p-4 text-lg font-medium w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-200"
               placeholder="Enter your email"
+              value={subscriptionEmail}
               type="email"
               aria-label="Email address"
             />
@@ -141,6 +206,7 @@ export default function Home() {
             <Shield className="ml-2" size={18} />
           </button>
         </form>
+        <ToastContainer />
 
         <div className="flex items-center gap-2 text-gray-500 text-sm mt-6 animate-bounce">
           <svg

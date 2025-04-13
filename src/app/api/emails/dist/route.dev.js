@@ -14,7 +14,7 @@ var _emails = _interopRequireDefault(require("@/lib/models/emails"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 var POST = function POST(request) {
-  var _ref, userName, userEmail;
+  var _ref, userName, userEmail, isEmailExists;
 
   return regeneratorRuntime.async(function POST$(_context) {
     while (1) {
@@ -33,29 +33,51 @@ var POST = function POST(request) {
           userName = _ref.userName;
           userEmail = _ref.userEmail;
           _context.next = 10;
+          return regeneratorRuntime.awrap(_emails["default"].findOne({
+            userEmail: userEmail
+          }));
+
+        case 10:
+          isEmailExists = _context.sent;
+
+          if (!isEmailExists) {
+            _context.next = 13;
+            break;
+          }
+
+          return _context.abrupt("return", _server.NextResponse.json({
+            message: "Email already exists"
+          }));
+
+        case 13:
+          _context.next = 15;
           return regeneratorRuntime.awrap(_emails["default"].create({
             userName: userName,
             userEmail: userEmail
           }));
 
-        case 10:
+        case 15:
           return _context.abrupt("return", _server.NextResponse.json({
             message: "Email saved successfully"
+          }, {
+            status: 201
           }));
 
-        case 13:
-          _context.prev = 13;
+        case 18:
+          _context.prev = 18;
           _context.t0 = _context["catch"](0);
-          return _context.abrupt("return", _server.NextResponse.status(500).json({
+          return _context.abrupt("return", _server.NextResponse.json({
             message: "Error saving email"
+          }, {
+            status: 500
           }));
 
-        case 16:
+        case 21:
         case "end":
           return _context.stop();
       }
     }
-  }, null, null, [[0, 13]]);
+  }, null, null, [[0, 18]]);
 };
 
 exports.POST = POST;
