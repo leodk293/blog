@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function Popup({
   userId,
@@ -13,7 +12,6 @@ export default function Popup({
   const [isOpen, setIsOpen] = useState(false);
   const [editedComment, setEditedComment] = useState(content);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
 
   const openPopup = () => setIsOpen(true);
   const closePopup = () => {
@@ -43,7 +41,6 @@ export default function Popup({
       onUpdate(editedComment);
       //const data = await response.json();
 
-      //router.refresh();
       closePopup();
     } catch (error) {
       console.error("Failed to update comment:", error);

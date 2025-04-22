@@ -15,7 +15,6 @@ var _users = _interopRequireDefault(require("@/lib/models/users"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-// Add a comment to a post
 var POST = function POST(request) {
   var _ref, postId, userId, content, user, post;
 
@@ -85,7 +84,6 @@ var POST = function POST(request) {
           }));
 
         case 21:
-          // Create and add the new comment
           post.comments.push({
             content: content,
             authorId: userId,
@@ -119,8 +117,7 @@ var POST = function POST(request) {
       }
     }
   }, null, null, [[0, 27]]);
-}; // Get comments for a post or delete a comment
-
+};
 
 exports.POST = POST;
 
@@ -177,7 +174,6 @@ var GET = function GET(request) {
           }));
 
         case 16:
-          // Find the comment
           comment = _post.comments.id(commentId);
 
           if (comment) {
@@ -197,7 +193,6 @@ var GET = function GET(request) {
             break;
           }
 
-          // Remove the comment
           _post.comments.pull({
             _id: commentId
           });
@@ -281,10 +276,8 @@ var PUT = function PUT(request, _ref2) {
           userId = _ref3.userId;
           commentId = _ref3.commentId;
           content = _ref3.content;
-          //const postId = params.postId; // Assuming the route is like /api/posts/[postId]/comments
           url = new URL(request.url);
-          postId = url.searchParams.get("postId"); //const userId = url.searchParams.get("userId");
-          // Validate required fields
+          postId = url.searchParams.get("postId");
 
           if (!(!postId || !userId || !commentId || !content)) {
             _context3.next = 12;
@@ -320,7 +313,6 @@ var PUT = function PUT(request, _ref2) {
           }));
 
         case 19:
-          // Find the comment in the post's comments array
           comment = post.comments.id(commentId);
 
           if (comment) {
@@ -347,9 +339,7 @@ var PUT = function PUT(request, _ref2) {
           }));
 
         case 24:
-          // Update the comment content
-          comment.content = content; // Save the updated post (which contains the updated comment)
-
+          comment.content = content;
           _context3.next = 27;
           return regeneratorRuntime.awrap(post.save());
 
