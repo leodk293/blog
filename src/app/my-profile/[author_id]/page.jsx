@@ -9,11 +9,9 @@ import { Search } from "lucide-react";
 import { useSession, signIn } from "next-auth/react";
 import {
   ArrowRight,
-  Edit,
   Plus,
   BookOpen,
   Calendar,
-  Clock,
   User,
   Mail,
   FileText,
@@ -27,8 +25,10 @@ const AuthorProfilePage = ({ params }) => {
   const [userPosts, setUserPosts] = useState({
     loading: false,
     posts: [],
+    comments: [],
     error: false,
   });
+
   const [userData, setUserData] = useState();
 
   function transformDate(target) {
@@ -65,16 +65,8 @@ const AuthorProfilePage = ({ params }) => {
     }
   }
 
-  // Mock user stats - in a real app these would come from your API
-  const userStats = {
-    postsCount: userPosts.posts.length,
-    followers: 1243,
-    following: 348,
-    memberSince: "January 2023",
-  };
-
   const fetchUserPosts = useCallback(async () => {
-    setUserPosts({ loading: true, posts: [], error: false });
+    setUserPosts({ loading: true, posts: [], comments: [], error: false });
     try {
       const response = await fetch(`/api/posts`, {
         method: "GET",
@@ -86,6 +78,14 @@ const AuthorProfilePage = ({ params }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      const filteredPosts = data.filter(
+        (item) => item.authorId === session?.user?.id
+      );
+      console.log(filteredPosts);
+      let commentsLength = 0;
+      for (let i = 0; i < filteredPosts.length; i++) {
+        commentsLength += filteredPosts[i].comments.length;
+      }
 
       setUserPosts({
         loading: false,
@@ -95,13 +95,19 @@ const AuthorProfilePage = ({ params }) => {
             (articleTitle === "" ||
               item.title.toLowerCase().includes(articleTitle.toLowerCase()))
         ),
+        comments: commentsLength,
         error: false,
       });
     } catch (error) {
       console.error("Failed to fetch posts:", error);
-      setUserPosts({ loading: false, posts: [], error: true });
+      setUserPosts({ loading: false, posts: [], comments: [], error: true });
     }
   }, [session?.user?.id]);
+
+  const userStats = {
+    postsCount: userPosts.posts.length,
+    commentsCount: userPosts.comments,
+  };
 
   useEffect(() => {
     if (status !== "loading") {
@@ -110,10 +116,8 @@ const AuthorProfilePage = ({ params }) => {
     }
   }, [fetchUserPosts, status]);
 
-  // Add this useEffect to filter posts when articleTitle changes
   useEffect(() => {
     if (status !== "loading" && userPosts.posts.length > 0) {
-      // Re-filter the existing posts without making a new API call
       setUserPosts((prevState) => ({
         ...prevState,
         posts: prevState.posts.filter(
@@ -158,7 +162,6 @@ const AuthorProfilePage = ({ params }) => {
       {session ? (
         session && (
           <main className="bg-gray-50 min-h-screen pb-16">
-            {/* Hero section with profile info */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
               <div className="container mx-auto px-4 py-16">
                 <div className="flex flex-col md:flex-row items-center gap-8">
@@ -188,24 +191,12 @@ const AuthorProfilePage = ({ params }) => {
                     </div>
 
                     <div className="flex flex-wrap justify-center md:justify-start gap-6 mt-4">
-                      <div className="text-center">
-                        <div className="text-3xl font-bold">
-                          {userStats.postsCount}
-                        </div>
-                        <div className="text-sm opacity-80">Posts</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-3xl font-bold">
-                          {userStats.followers}
-                        </div>
-                        <div className="text-sm opacity-80">Followers</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-3xl font-bold">
-                          {userStats.following}
-                        </div>
-                        <div className="text-sm opacity-80">Following</div>
-                      </div>
+                      <h1 className=" text-3xl font-bold">
+                        Total Posts : {userStats.postsCount}
+                      </h1>
+                      <h1 className=" text-3xl font-bold">
+                        Total Comments : {userStats.commentsCount}
+                      </h1>
                     </div>
                   </div>
                   <Link
@@ -293,7 +284,7 @@ const AuthorProfilePage = ({ params }) => {
                         onChange={(e) => {
                           setArticleTitle(e.target.value);
                           if (e.target.value === "") {
-                            fetchUserPosts(); // Refetch all posts when search is cleared
+                            fetchUserPosts();
                           }
                         }}
                         placeholder="Enter the title of an article"
@@ -325,10 +316,6 @@ const AuthorProfilePage = ({ params }) => {
                               <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
                                 {post.category}
                               </span>
-                              {/* <div className="flex items-center text-sm text-gray-500">
-                          <Clock size={14} className="mr-1" />
-                          <span>5 min read</span>
-                        </div> */}
                             </div>
 
                             <h2 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">

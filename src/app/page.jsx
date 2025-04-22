@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import googleLogo from "./assets/google-logo.png";
 import { useState, useEffect, useCallback } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import Loader from "./components/loader/Loader";
 import ReadMore from "./components/readMore";
@@ -264,7 +264,9 @@ export default function Home() {
         {!posts.loading && !posts.error && posts.data.length === 0 && (
           <div className="text-center p-8 bg-gray-50 rounded-lg w-full max-w-2xl">
             <p className="text-gray-600 font-medium">
-              No posts found for this category. Check back later!
+              {category === "all"
+                ? "No posts found. Check back later."
+                : "No posts found in this category. Check back later"}
             </p>
           </div>
         )}

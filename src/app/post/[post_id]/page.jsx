@@ -5,16 +5,9 @@ import React from "react";
 import Loader from "@/app/components/loader/Loader";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Calendar,
-  User,
-  Tag,
-  Delete,
-  Share2,
-  Edit,
-} from "lucide-react";
-import { useSession } from "next-auth/react";
+import { ArrowLeft, Calendar, User, Tag, Delete, Edit } from "lucide-react";
+import { useSession, signIn } from "next-auth/react";
+import Popup from "@/app/components/Popup";
 
 const PostPage = ({ params }) => {
   const resolvedParams = use(params);
@@ -25,9 +18,10 @@ const PostPage = ({ params }) => {
     loading: false,
     data: undefined,
   });
+  const [comment, setComment] = useState("");
   const router = useRouter();
 
-  const { data: session } = useSession();
+  const { status, data: session } = useSession();
 
   async function fetchCurrentPost() {
     setPostData((prev) => ({ ...prev, loading: true, error: false }));
@@ -42,10 +36,39 @@ const PostPage = ({ params }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      console.log(data);
       setPostData({ loading: false, error: false, data });
     } catch (error) {
       console.error("Failed to fetch post:", error);
       setPostData((prev) => ({ ...prev, loading: false, error: true }));
+    }
+  }
+  const { data } = postData;
+
+  async function handleCommentStoring(postId, userId, comment) {
+    if (status === "authenticated") {
+      try {
+        const response = await fetch("/api/comments", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            postId: postId,
+            userId: userId,
+            content: comment,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        fetchCurrentPost();
+      } catch (error) {
+        console.error("Failed to submit comment:", error);
+      }
+    } else {
+      alert("You must be logged in to comment");
+      router.push("/");
     }
   }
 
@@ -68,6 +91,29 @@ const PostPage = ({ params }) => {
         router.push("/");
       } catch (error) {
         console.error("Failed to delete post:", error);
+      }
+    }
+  }
+
+  async function handleCommentSuppression(commentId, postId, userId) {
+    const confirmed = confirm("Are you sure you want to delete this comment ?");
+    if (confirmed) {
+      try {
+        const response = await fetch(
+          `/api/comments?commentId=${commentId}&userId=${userId}&postId=${postId}&action=delete`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        fetchCurrentPost();
+      } catch (error) {
+        console.error("Failed to delete comment:", error);
       }
     }
   }
@@ -129,11 +175,8 @@ const PostPage = ({ params }) => {
       .padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}`;
 
     const fullFormattedDate = `${formattedDate} ${formattedTime}`;
-    console.log(fullFormattedDate);
     return fullFormattedDate;
   }
-
-  const { data } = postData;
 
   return (
     <div className="bg-gray-50 min-h-screen pb-16">
@@ -254,34 +297,126 @@ const PostPage = ({ params }) => {
               </div>
             </div>
 
-            {/* Share buttons */}
-            <div className="border-t border-gray-200 pt-8 mt-12">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
-                <div>
-                  <h3 className="font-medium text-gray-700 mb-3">
-                    Share this article
-                  </h3>
-                  <div className="flex gap-2">
-                    {["Twitter", "Facebook", "LinkedIn"].map((platform) => (
-                      <button
-                        key={platform}
-                        className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-                        aria-label={`Share on ${platform}`}
-                      >
-                        <Share2 size={18} />
-                      </button>
-                    ))}
+            <h1 className="text-2xl font-bold">
+              {postData.data.comments.length} Comment
+              {postData.data.comments.length <= 1 ? "" : "s"}
+            </h1>
+
+            {status === "authenticated" ? (
+              <div className=" flex flex-row gap-2">
+                {session?.user ? (
+                  <Image
+                    src={session?.user?.image}
+                    alt={session?.user?.name || "User avatar"}
+                    width={45}
+                    height={45}
+                    className=" self-center border border-black object-cover rounded-full"
+                  />
+                ) : (
+                  <User className=" self-center" size={45} />
+                )}
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    if (postData.data && postData.data._id) {
+                      handleCommentStoring(
+                        postData.data._id,
+                        session?.user?.id,
+                        comment
+                      );
+                      setComment("");
+                    } else {
+                      console.error("Some infos are missing");
+                    }
+                  }}
+                  className=" flex flex-col gap-2 w-full self-center"
+                >
+                  <input
+                    required
+                    onChange={(event) => setComment(event.target.value)}
+                    value={comment}
+                    className="border-b p-1 outline-0 border-b-black text-xl w-full font-medium"
+                    type="text"
+                    placeholder="Add a comment..."
+                  />
+                  <button className="border border-transparent self-end w-[120px] font-medium cursor-pointer rounded-full px-2 py-1 text-white bg-blue-950">
+                    Comment
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 items-center">
+                <p className=" text-[13px] font-medium italic">
+                  You must be logged in to comment
+                </p>
+                <button
+                  onClick={() => signIn("google")}
+                  className=" border border-transparent bg-red-800 text-white rounded-full px-4 py-1 cursor-pointer"
+                >
+                  Sign in
+                </button>
+              </div>
+            )}
+
+            <section className=" pt-5 flex flex-col gap-1">
+              {postData.data.comments.map((comment) => (
+                <div
+                  key={comment._id}
+                  className="flex flex-col gap-2 border-b border-gray-200 py-4"
+                >
+                  <div className="flex flex-row gap-2">
+                    <Image
+                      src={comment.authorImage}
+                      alt={comment.authorName}
+                      width={45}
+                      height={45}
+                      className=" self-center border border-black object-cover rounded-full"
+                    />
+                    <div className="flex flex-col gap-1">
+                      <p className="font-semibold text-gray-900">
+                        {comment.authorName}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {transformDate(comment.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-row justify-between">
+                    <p className="text-gray-700 font-medium leading-relaxed">
+                      {comment.content}
+                    </p>
+                    <div className=" font-medium flex flex-row gap-2">
+                      {session?.user?.id === comment.authorId && (
+                        <Popup
+                          userId={session?.user?.id}
+                          commentId={comment._id}
+                          postId={postData.data._id}
+                          content={comment.content}
+                          buttonText={"Edit"}
+                          onUpdate={() => fetchCurrentPost()}
+                        />
+                      )}
+
+                      {(session?.user?.id === comment.authorId ||
+                        postData.data.authorId === session?.user?.id) && (
+                        <button
+                          onClick={() =>
+                            handleCommentSuppression(
+                              comment._id,
+                              postData.data._id,
+                              session?.user?.id
+                            )
+                          }
+                          className=" w-[65px] cursor-pointer border border-transparent bg-red-900 text-white px-2 py-1 rounded-full"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                <Link
-                  href={`/author-profile/${data.authorId}`}
-                  className="inline-flex items-center px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
-                >
-                  More posts by {data.authorName}
-                </Link>
-              </div>
-            </div>
+              ))}
+            </section>
           </div>
         </div>
       </div>

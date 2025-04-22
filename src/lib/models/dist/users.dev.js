@@ -13,6 +13,32 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
+/*import mongoose, { Schema, models } from "mongoose";
+
+const userSchema = new Schema(
+    {
+        fullName: {
+            type: String,
+            required: true
+        },
+        email: {
+            type: String,
+            unique: true,
+            required: true
+        },
+        image: {
+            type: String,
+            required: true
+
+        }
+
+    },
+    { timestamps: true }
+);
+
+const User = models.User || mongoose.model("User", userSchema);
+
+export default User;*/
 var userSchema = new _mongoose.Schema({
   fullName: {
     type: String,
@@ -26,6 +52,17 @@ var userSchema = new _mongoose.Schema({
   image: {
     type: String,
     required: true
+  },
+  // Optional fields to track user's posts and activity
+  posts: [{
+    type: _mongoose["default"].Schema.Types.ObjectId,
+    ref: "Post"
+  }],
+  // You might want to add role-based permissions later
+  role: {
+    type: String,
+    "enum": ["user", "admin"],
+    "default": "user"
   }
 }, {
   timestamps: true

@@ -9,11 +9,9 @@ import ReadMore from "@/app/components/readMore";
 import { useSession, signIn } from "next-auth/react";
 import {
   ArrowRight,
-  Edit,
   Plus,
   BookOpen,
   Calendar,
-  Clock,
   User,
   Mail,
   FileText,
@@ -26,6 +24,7 @@ const AuthorProfilePage = ({ params }) => {
   const [userPosts, setUserPosts] = useState({
     loading: false,
     posts: [],
+    comments: [],
     error: false,
   });
   const [userData, setUserData] = useState();
@@ -64,16 +63,8 @@ const AuthorProfilePage = ({ params }) => {
     }
   }
 
-  // Mock user stats - in a real app these would come from your API
-  const userStats = {
-    postsCount: userPosts.posts.length,
-    followers: 1243,
-    following: 348,
-    memberSince: "January 2023",
-  };
-
   const fetchUserPosts = useCallback(async () => {
-    setUserPosts({ loading: true, posts: [], error: false });
+    setUserPosts({ loading: true, posts: [], comments: [], error: false });
     try {
       const response = await fetch(`/api/posts`, {
         method: "GET",
@@ -85,16 +76,27 @@ const AuthorProfilePage = ({ params }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      const filteredPosts = data.filter((item) => item.authorId === id);
+      let commentsLength = 0;
+      for (let i = 0; i < filteredPosts.length; i++) {
+        commentsLength += filteredPosts[i].comments.length;
+      }
       setUserPosts({
         loading: false,
         posts: data.filter((item) => item.authorId === id),
+        comments: commentsLength,
         error: false,
       });
     } catch (error) {
       console.error("Failed to fetch posts:", error);
-      setUserPosts({ loading: false, posts: [], error: true });
+      setUserPosts({ loading: false, posts: [], comments: [], error: true });
     }
   }, [id]);
+
+  const userStats = {
+    postsCount: userPosts.posts.length,
+    commentsCount: userPosts.comments,
+  };
 
   useEffect(() => {
     if (status !== "loading") {
@@ -142,7 +144,6 @@ const AuthorProfilePage = ({ params }) => {
       {userData ? (
         userData && (
           <main className="bg-gray-50 min-h-screen pb-16">
-            {/* Hero section with profile info */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
               <div className="container mx-auto px-4 py-16">
                 <div className="flex flex-col md:flex-row items-center gap-8">
@@ -172,31 +173,18 @@ const AuthorProfilePage = ({ params }) => {
                     </div>
 
                     <div className="flex flex-wrap justify-center md:justify-start gap-6 mt-4">
-                      <div className="text-center">
-                        <div className="text-3xl font-bold">
-                          {userStats.postsCount}
-                        </div>
-                        <div className="text-sm opacity-80">Posts</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-3xl font-bold">
-                          {userStats.followers}
-                        </div>
-                        <div className="text-sm opacity-80">Followers</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-3xl font-bold">
-                          {userStats.following}
-                        </div>
-                        <div className="text-sm opacity-80">Following</div>
-                      </div>
+                      <h1 className=" text-3xl font-bold">
+                        Total Posts : {userStats.postsCount}
+                      </h1>
+                      <h1 className=" text-3xl font-bold">
+                        Total Comments : {userStats.commentsCount}
+                      </h1>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Profile stats */}
             <div className="container mx-auto px-4 py-6">
               <div className="bg-white rounded-xl shadow-md p-6 -mt-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -224,20 +212,10 @@ const AuthorProfilePage = ({ params }) => {
                       <p className="font-semibold">{userPosts.posts.length}</p>
                     </div>
                   </div>
-                  {/* <div className="flex items-center gap-4 p-4 rounded-lg bg-green-50">
-              <div className="bg-green-100 p-3 rounded-full">
-                <FileText size={24} className="text-green-600" />
-              </div>
-              <div>
-                <h3 className="text-gray-600 text-sm">Drafts</h3>
-                <p className="font-semibold">0</p>
-              </div>
-            </div> */}
                 </div>
               </div>
             </div>
 
-            {/* Posts section */}
             <div className="container mx-auto px-4 mt-6">
               {userPosts.loading && (
                 <div className="flex justify-center py-12">
@@ -264,19 +242,9 @@ const AuthorProfilePage = ({ params }) => {
 
               {!userPosts.loading && !userPosts.error && (
                 <div className="mt-6">
-                  <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-                      Articles posted by {userData.fullName}
-                    </h2>
-                    <div className="flex gap-2">
-                      <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
-                        Recent
-                      </button>
-                      <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
-                        Popular
-                      </button>
-                    </div>
-                  </div>
+                  <h2 className="text-2xl mb-8 text-center md:text-3xl font-bold text-gray-900">
+                    Articles posted by {userData.fullName}
+                  </h2>
 
                   {userPosts.posts.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -301,10 +269,6 @@ const AuthorProfilePage = ({ params }) => {
                               <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
                                 {post.category}
                               </span>
-                              {/* <div className="flex items-center text-sm text-gray-500">
-                          <Clock size={14} className="mr-1" />
-                          <span>5 min read</span>
-                        </div> */}
                             </div>
 
                             <h2 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">

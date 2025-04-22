@@ -62,24 +62,26 @@ const Nav = () => {
               </button>
             ) : (
               <div className="flex items-center gap-3">
-                <div
-                  className={`flex items-center gap-2 py-1.5 pl-2 pr-4 rounded-full border  ${
-                    isScrolled
-                      ? "bg-transparent text-white border-gray-200"
-                      : "bg-gray-100 text-black border-gray-200"
-                  }`}
-                >
-                  <Image
-                    src={session?.user?.image}
-                    alt={session?.user?.name}
-                    width={32}
-                    height={32}
-                    className="rounded-full ring-2 ring-white"
-                  />
-                  <span className={"font-medium hidden sm:inline"}>
-                    {session?.user?.name?.split(" ")[0]}
-                  </span>
-                </div>
+                <Link title="Visit your profile" href={`/my-profile/${session?.user?.id}`}>
+                  <div
+                    className={`flex items-center gap-2 py-1.5 pl-2 pr-4 rounded-full border  ${
+                      isScrolled
+                        ? "bg-transparent text-white border-gray-200"
+                        : "bg-gray-100 text-black border-gray-200"
+                    }`}
+                  >
+                    <Image
+                      src={session?.user?.image}
+                      alt={session?.user?.name}
+                      width={32}
+                      height={32}
+                      className="rounded-full ring-2 ring-white"
+                    />
+                    <span className={"font-medium hidden sm:inline"}>
+                      {session?.user?.name?.split(" ")[0]}
+                    </span>
+                  </div>
+                </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
                   className={`flex items-center ${
