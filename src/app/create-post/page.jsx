@@ -17,8 +17,8 @@ const CreatePostPage = () => {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const notify = () => {
-    toast.success("Comment added successfully", {
+  const notify = (message) => {
+    toast.success(message, {
       position: "top-right",
       autoClose: 2000,
       hideProgressBar: false,
@@ -86,7 +86,8 @@ const CreatePostPage = () => {
         if (!response.ok) {
           throw new Error(data.message || "Failed to create post");
         }
-        notify();
+
+        notify("Post created successfully!");
 
         router.push("/");
         router.refresh();
@@ -135,6 +136,7 @@ const CreatePostPage = () => {
               type="file"
               className="hidden"
               onChange={handleImageChange}
+              accept="image/jpeg,image/png,image/gif"
             />
             <label
               htmlFor="thumbnail"

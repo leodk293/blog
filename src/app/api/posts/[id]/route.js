@@ -1,7 +1,7 @@
 import Post from "@/lib/models/blog_posts";
 import { connectMongoDB } from "@/lib/db/connectMongoDB";
 import { NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
+import { put } from '@vercel/blob';
 
 export const GET = async (request, { params }) => {
     try {
@@ -108,15 +108,13 @@ export const PUT = async (request, { params }) => {
 
         // Handle image upload if a new image is provided
         if (imageFile && imageFile.size > 0) {
-            const timeStamp = Date.now();
-            const imageName = imageFile.name;
-            const imageBuffer = await imageFile.arrayBuffer();
-            const buffer = Buffer.from(imageBuffer);
-            const path = `./public/${timeStamp}_${imageName}`;
-            await writeFile(path, buffer);
-            const imageUrl = `/${timeStamp}_${imageName}`;
+            // Upload to Vercel Blob Storage
+            const blob = await put(`blog-posts/${Date.now()}_${imageFile.name}`, imageFile, {
+                access: 'public',
+            });
 
-            updateData.imageUrl = imageUrl;
+            // Store the URL from Vercel Blob
+            updateData.imageUrl = blob.url;
         }
 
         if (Object.keys(updateData).length === 0) {

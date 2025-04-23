@@ -2,11 +2,17 @@ import { NextResponse } from "next/server";
 import { connectMongoDB } from "@/lib/db/connectMongoDB";
 import Post from "@/lib/models/blog_posts";
 import User from "@/lib/models/users";
-import { writeFile } from "fs/promises";
-
+import { put } from '@vercel/blob';
 
 export const POST = async (request) => {
     try {
+        if (!process.env.BLOB_READ_WRITE_TOKEN) {
+            return NextResponse.json(
+                { message: "Missing BLOB_READ_WRITE_TOKEN" },
+                { status: 500 }
+            );
+        }
+
         await connectMongoDB();
 
         const formData = await request.formData();
@@ -34,15 +40,14 @@ export const POST = async (request) => {
             );
         }
 
-        const imageName = image.name;
-        const timeStamp = Date.now();
+        // Upload image to Vercel Blob Storage
+        const blob = await put(`blog-posts/${Date.now()}_${image.name}`, image, {
+            access: 'public',
+        });
 
-        const imageBuffer = await image.arrayBuffer();
-        const buffer = Buffer.from(imageBuffer);
-        const path = `./public/${timeStamp}_${imageName}`;
-        await writeFile(path, buffer);
-        const imageUrl = `/${timeStamp}_${imageName}`;
-        console.log(imageUrl);
+        // Use the URL returned from Vercel Blob
+        const imageUrl = blob.url;
+        console.log(`Image uploaded to: ${imageUrl}`);
 
         const newPost = await Post.create({
             title,

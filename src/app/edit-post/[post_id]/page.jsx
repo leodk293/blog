@@ -8,6 +8,7 @@ import Image from "next/image";
 
 const EditPostPage = ({ params }) => {
   const { status, data: session } = useSession();
+  //const id = params.post_id;
   const resolvedParams = use(params);
   const id = resolvedParams.post_id;
 
@@ -155,8 +156,8 @@ const EditPostPage = ({ params }) => {
                 <Image
                   src={imageUrl}
                   alt="Current thumbnail"
-                  layout="fill"
-                  objectFit="cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             </div>
@@ -169,6 +170,7 @@ const EditPostPage = ({ params }) => {
               type="file"
               className="hidden"
               onChange={handleImageChange}
+              accept="image/jpeg,image/png,image/gif"
             />
             <label
               htmlFor="thumbnail"
