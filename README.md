@@ -21,17 +21,15 @@ Users can sign in with their **Google account**, create and manage blog posts, a
 
 ## 🚀 Getting Started
 
-### 1. Clone the repository
-
 ```bash
 git clone https://github.com/leodk293/blog
 cd blog
 
-### 2.  Install dependencies
+###  Install dependencies
 
 npm install
 
-### 3.  Set up environment variables
+###  Set up environment variables
 touch .env.local
 MONGODB_URI=your_mongodb_connection_string
 NEXTAUTH_URL=http://localhost:3000
@@ -39,5 +37,5 @@ GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 NEXTAUTH_SECRET=your_secret_key
 
-### 4.  Run the development server
+###  Run the development server
 npm run dev
